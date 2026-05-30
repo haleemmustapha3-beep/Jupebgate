@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JupebGate — JUPEB Direct Entry Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #06080F;
+      --card: #0D1120;
+      --card2: #111827;
+      --border: #1C2540;
+      --blue: #3D6FFF;
+      --blue-glow: #3D6FFF40;
+      --gold: #FFD166;
+      --gold-dim: #FFD16630;
+      --text: #E2E8FF;
+      --muted: #5A6A99;
+      --pass: #4ADE80;
+      --fail: #F87171;
+      --warn: #FBBF24;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* animated star bg */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 10% 10%, #3D6FFF12 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 80%, #FFD16610 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, #3D6FFF08 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* grid overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: #06080Fcc;
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.04em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-gate { color: var(--gold); }
+    .logo-badge {
+      font-size: 10px;
+      background: var(--blue);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .flag { font-size: 1.1rem; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 3rem 1.5rem 1.5rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gold-dim);
+      border: 1px solid #FFD16640;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.8rem;
+    }
+    .hero h1 span { color: var(--blue); }
+    .hero p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto 1.5rem;
+    }
+
+    /* ── POINT METER ── */
+    .meter-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.4rem;
+      margin: 0 auto 2rem;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .meter-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .meter-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--blue), var(--gold));
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      width: 0%;
+    }
+    .meter-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-width: 50px;
+      text-align: right;
+    }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 1.2rem 4rem;
+    }
+
+    /* ── STEP TABS ── */
+    .step-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 1.5rem;
+    }
+    .step-tab {
+      flex: 1;
+      padding: 8px 6px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .step-tab.active {
+      background: var(--blue);
+      color: #fff;
+    }
+    .step-tab.done { color: var(--pass); }
+    .step-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      animation: fadeUp 0.35s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+    .card-sub { color: var(--muted); font-size: 14px; margin-bottom: 1.6rem; line-height: 1.5; }
+
+    /* ── SELECT ── */
+    .field-group { margin-bottom: 1.2rem; }
+    .field-label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 12px 16px;
+      appearance: none;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    select:focus, input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-glow);
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    /* ── SUBJECT CARDS ── */
+    .subjects-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.4rem; }
+    .subject-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .subject-card:focus-within { border-color: var(--blue); }
+    .subject-num {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .subject-info { flex: 1; }
+    .subject-name-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed var(--border);
+      border-radius: 0;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 2px 0 4px;
+      outline: none;
+      margin-bottom: 4px;
+    }
+    .subject-name-input::placeholder { color: var(--muted); }
+    .subject-name-input:focus { border-color: var(--blue); box-shadow: none; }
+    .grade-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+    .grade-pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Syne', sans-serif;
+    }
+    .grade-pill:hover { border-color: var(--blue); color: var(--text); }
+    .grade-pill.selected-A { background: #4ADE8020; border-color: #4ADE80; color: #4ADE80; }
+    .grade-pill.selected-B { background: #60A5FA20; border-color: #60A5FA; color: #60A5FA; }
+    .grade-pill.selected-C { background: #FBBF2420; border-color: #FBBF24; color: #FBBF24; }
+    .grade-pill.selected-D { background: #F9731620; border-color: #F97316; color: #F97316; }
+    .grade-pill.selected-F { background: #F8717120; border-color: #F87171; color: #F87171; }
+    .subject-pts {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      min-width: 30px;
+      text-align: right;
+    }
+
+    /* ── COURSE POINT REQUIRED ── */
+    .course-req {
+      background: #3D6FFF10;
+      border: 1px solid #3D6FFF30;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .course-req strong { color: var(--text); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 24px; border-radius: 10px; border: none;
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
+    }
+    .btn-primary { background: var(--blue); color: #fff; width: 100%; }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 24px var(--blue-glow); }
+    .btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--blue); color: var(--text); }
+    .btn-gold { background: var(--gold); color: #06080F; width: 100%; }
+    .btn-gold:hover { filter: brightness(0.92); transform: translateY(-1px); }
+    .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+
+    /* ── RESULT ── */
+    .result-hero {
+      text-align: center;
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.4rem;
+    }
+    .result-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .result-sub { color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    .score-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 1rem 0;
+    }
+    .score-big {
+      font-family: 'Syne', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .score-denom { font-size: 1.2rem; color: var(--muted); align-self: flex-end; margin-bottom: 8px; }
+
+    .breakdown {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .brow {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .brow:last-child { border-bottom: none; }
+    .brow-key { color: var(--muted); }
+    .brow-val { font-weight: 600; }
+
+    .verdict-box {
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .verdict-eligible { background: #4ADE8010; border: 1px solid #4ADE8030; color: #86EFAC; }
+    .verdict-conditional { background: #FBBF2410; border: 1px solid #FBBF2430; color: #FDE68A; }
+    .verdict-ineligible { background: #F8717110; border: 1px solid #F8717130; color: #FCA5A5; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      header { padding: 1rem; }
+      .card { padding: 1.4rem; }
+      .hero { padding: 2rem 1rem 1rem; }
+      .grade-pills { gap: 3px; }
+      .grade-pill { padding: 2px 8px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    Jupeb<span class="logo-gate">Gate</span>
+    <span class="logo-badge">Direct Entry</span>
+  </div>
+  <div class="header-right">
+    <span class="flag">🇳🇬</span> Nigeria
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">✦ Skip JAMB. Go Direct.</div>
+  <h1>Check Your <span>JUPEB</span><br/>Direct Entry Eligibility</h1>
+  <p>Enter your 3 subject grades and course. We'll calculate your points and tell you if you qualify for Direct Entry into any Nigerian university.</p>
+
+  <!-- LIVE METER -->
+  <div class="meter-bar">
+    <span class="meter-label">Your Points</span>
+    <div class="meter-track">
+      <div class="meter-fill" id="meterFill"></div>
+    </div>
+    <span class="meter-score" id="meterScore">0 / 16</span>
+  </div>
+</div>
+
+<main>
+  <!-- STEP TABS -->
+  <div class="step-tabs">
+    <button class="step-tab active" id="tab1">
+      <span class="step-num">1</span> University
+    </button>
+    <button class="step-tab" id="tab2">
+      <span class="step-num">2</span> Course
+    </button>
+    <button class="step-tab" id="tab3">
+      <span class="step-num">3</span> Grades
+    </button>
+    <button class="step-tab" id="tab4">
+      <span class="step-num">4</span> Result
+    </button>
+  </div>
+
+  <!-- STEP 1: UNIVERSITY -->
+  <div class="card" id="step1">
+    <div class="card-title">Pick a University</div>
+    <div class="card-sub">Select the Nigerian university you want to apply to via Direct Entry.</div>
+    <div class="field-group">
+      <label class="field-label">University</label>
+      <div class="select-wrap">
+        <select id="uniSelect">
+          <option value="">-- Select university --</option>
+          <option>University of Lagos (UNILAG)</option>
+          <option>University of Ibadan (UI)</option>
+          <option>Ahmadu Bello University (ABU)</option>
+          <option>Obafemi Awolowo University (OAU)</option>
+          <option>University of Nigeria, Nsukka (UNN)</option>
+          <option>Lagos State University (LASU)</option>
+          <option>University of Benin (UNIBEN)</option>
+          <option>Bayero University Kano (BUK)</option>
+          <option>University of Port Harcourt (UNIPORT)</option>
+          <option>Nnamdi Azikiwe University (UNIZIK)</option>
+          <option>Federal University of Technology, Akure (FUTA)</option>
+          <option>University of Ilorin (UNILORIN)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(2)">Continue →</button>
+  </div>
+
+  <!-- STEP 2: COURSE -->
+  <div class="card hidden" id="step2">
+    <div class="card-title">Select Your Course</div>
+    <div class="card-sub">Each course has a minimum JUPEB point requirement for Direct Entry.</div>
+    <div class="field-group">
+      <label class="field-label">Course / Programme</label>
+      <div class="select-wrap">
+        <select id="courseSelect" onchange="onCourseChange()">
+          <option value="">-- Select course --</option>
+        </select>
+      </div>
+    </div>
+    <div class="course-req hidden" id="courseReqBox">
+      📌 Minimum points required: <strong id="courseReqVal">—</strong> / 16
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)" style="flex:1">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: GRADES -->
+  <div class="card hidden" id="step3">
+    <div class="card-title">Enter Your Grades</div>
+    <div class="card-sub">Select your grade for each of your 3 JUPEB subjects. Points are calculated automatically.</div>
+
+    <div class="subjects-list" id="subjectsList">
+      <!-- 3 subject cards -->
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="checkEligibility()" style="flex:1">Check Eligibility ✓</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: RESULT -->
+  <div class="card hidden" id="step4">
+    <div id="resultContent"></div>
+    <button class="btn btn-gold" onclick="restart()">🔁 Check Again</button>
+  </div>
+</main>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const COURSES = [
+  { name: "Medicine & Surgery",        minPts: 14 },
+  { name: "Law",                        minPts: 12 },
+  { name: "Engineering (All)",          minPts: 11 },
+  { name: "Computer Science",           minPts: 10 },
+  { name: "Pharmacy",                   minPts: 13 },
+  { name: "Accounting",                 minPts: 10 },
+  { name: "Economics",                  minPts: 9  },
+  { name: "Mass Communication",         minPts: 9  },
+  { name: "Nursing",                    minPts: 11 },
+  { name: "Architecture",               minPts: 10 },
+  { name: "Agricultural Science",       minPts: 8  },
+  { name: "Education (All)",            minPts: 7  },
+  { name: "Business Administration",    minPts: 9  },
+  { name: "Mathematics",                minPts: 10 },
+  { name: "Physics",                    minPts: 10 },
+  { name: "Biochemistry",               minPts: 11 },
+  { name: "Microbiology",               minPts: 10 },
+  { name: "Political Science",          minPts: 8  },
+  { name: "Sociology",                  minPts: 8  },
+  { name: "English & Literary Studies", minPts: 9  },
+];
+
+const GRADE_PTS = { A:5, B:4, C:3, D:2, F:0 };
+const GRADES = ['A','B','C','D','F'];
+const BONUS = 1;
+const MAX_PTS = 16; // 15 + 1 bonus
+const MIN_PASS = 7;
+
+let subjectGrades = ['A','A','A'];
+let subjectNames = ['','',''];
+let selectedCourse = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────
+function initCourses() {
+  const sel = document.getElementById('courseSelect');
+  COURSES.forEach((c,i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = `${c.name} (min ${c.minPts} pts)`;
+    sel.appendChild(opt);
+  });
+}
+
+function buildSubjects() {
+  const list = document.getElementById('subjectsList');
+  list.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const pts = GRADE_PTS[subjectGrades[i]];
+    const div = document.createElement('div');
+    div.className = 'subject-card';
+    div.innerHTML = `
+      <div class="subject-num">${i+1}</div>
+      <div class="subject-info">
+        <input class="subject-name-input" type="text" placeholder="Subject name (e.g. Chemistry)"
+          value="${subjectNames[i]}" oninput="subjectNames[${i}]=this.value"/>
+        <div class="grade-pills">
+          ${GRADES.map(g => `
+            <button class="grade-pill ${subjectGrades[i]===g ? 'selected-'+g : ''}"
+              onclick="setGrade(${i},'${g}',this)">${g}</button>`).join('')}
+        </div>
+      </div>
+      <div class="subject-pts" id="pts${i}" style="color:${ptColor(pts)}">${pts}pt</div>`;
+    list.appendChild(div);
+  }
+  updateMeter();
+}
+
+function setGrade(idx, grade, btn) {
+  subjectGrades[idx] = grade;
+  // update pills
+  btn.closest('.grade-pills').querySelectorAll('.grade-pill').forEach(p => {
+    p.className = 'grade-pill';
+  });
+  btn.className = `grade-pill selected-${grade}`;
+  // update points display
+  const pts = GRADE_PTS[grade];
+  const ptsEl = document.getElementById(`pts${idx}`);
+  ptsEl.textContent = `${pts}pt`;
+  ptsEl.style.color = ptColor(pts);
+  updateMeter();
+}
+
+function ptColor(pts) {
+  if (pts >= 4) return '#4ADE80';
+  if (pts >= 3) return '#60A5FA';
+  if (pts >= 2) return '#FBBF24';
+  if (pts >= 1) return '#F97316';
+  return '#F87171';
+}
+
+function totalPoints() {
+  return subjectGrades.reduce((s,g) => s + GRADE_PTS[g], 0) + BONUS;
+}
+
+function updateMeter() {
+  const pts = totalPoints();
+  const pct = (pts / MAX_PTS) * 100;
+  document.getElementById('meterFill').style.width = pct + '%';
+  document.getElementById('meterScore').textContent = `${pts} / ${MAX_PTS}`;
+  document.getElementById('meterScore').style.color =
+    pts >= 12 ? '#4ADE80' : pts >= 7 ? '#FBBF24' : '#F87171';
+}
+
+function onCourseChange() {
+  const idx = document.getElementById('courseSelect').value;
+  if (idx === '') { document.getElementById('courseReqBox').classList.add('hidden'); return; }
+  selectedCourse = COURSES[idx];
+  document.getElementById('courseReqVal').textContent = selectedCourse.minPts;
+  document.getElementById('courseReqBox').classList.remove('hidden');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────
+function goStep(n) {
+  if (n === 2 && !document.getElementById('uniSelect').value) {
+    alert('Please select a university.'); return;
+  }
+  if (n === 3) {
+    if (!selectedCourse) { alert('Please select a course.'); return; }
+    buildSubjects();
+  }
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById(`step${i}`).classList.toggle('hidden', i !== n);
+    const tab = document.getElementById(`tab${i}`);
+    tab.classList.remove('active','done');
+    if (i === n) tab.classList.add('active');
+    if (i < n)  tab.classList.add('done');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── CHECK ─────────────────────────────────────────────────────────────
+function checkEligibility() {
+  const pts = totalPoints();
+  const uni = document.getElementById('uniSelect').value;
+  const course = selectedCourse;
+
+  const generalPass = pts >= MIN_PASS;
+  const coursePass  = pts >= course.minPts;
+
+  let status, icon, titleText, subText, verdictClass, nextSteps;
+
+  if (generalPass && coursePass) {
+    status = 'eligible';
+    icon = '🎉';
+    titleText = 'You Are Eligible!';
+    subText = `Your JUPEB score of <strong>${pts} points</strong> meets the requirement for <strong>${course.name}</strong> via Direct Entry.`;
+    verdictClass = 'verdict-eligible';
+    nextSteps = 'Log in to the JAMB Direct Entry portal, upload your JUPEB result, and select your preferred institution and course.';
+  } else if (generalPass && !coursePass) {
+    status = 'conditional';
+    icon = '⚠️';
+    titleText = 'Partially Eligible';
+    subText = `You passed the general JUPEB requirement (7+ pts), but ${course.name} requires <strong>${course.minPts} points</strong> and you scored <strong>${pts}</strong>.`;
+    verdictClass = 'verdict-conditional';
+    nextSteps = `Consider switching to a related course with a lower cut-off, or retake JUPEB to improve your score.`;
+  } else {
+    status = 'ineligible';
+    icon = '✗';
+    titleText = 'Not Yet Eligible';
+    subText = `Your score of <strong>${pts} points</strong> is below the general JUPEB minimum of <strong>7 points</strong>.`;
+    verdictClass = 'verdict-ineligible';
+    nextSteps = 'You may need to retake JUPEB or consider other pathways like UTME or ND for Polytechnic Direct Entry.';
+  }
+
+  const ptColor = pts >= course.minPts ? '#4ADE80' : pts >= MIN_PASS ? '#FBBF24' : '#F87171';
+  const subjectRows = subjectGrades.map((g,i) => `
+    <div class="brow">
+      <span class="brow-key">${subjectNames[i] || `Subject ${i+1}`}</span>
+      <span class="brow-val" style="color:${ptColor}">${g} — ${GRADE_PTS[g]} pts</span>
+    </div>`).join('');
+
+  document.getElementById('resultContent').innerHTML = `
+    <div class="result-hero">
+      <div class="result-icon">${icon}</div>
+      <div class="result-title">${titleText}</div>
+      <div class="result-sub" style="margin-bottom:12px" >${subText}</div>
+      <div class="score-display">
+        <span class="score-big" style="color:${ptColor}">${pts}</span>
+        <span class="score-denom">/ ${MAX_PTS} pts</span>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      ${subjectRows}
+      <div class="brow">
+        <span class="brow-key">Bonus Point</span>
+        <span class="brow-val" style="color:#4ADE80">+1 pt ✓</span>
+      </div>
+      <div class="brow">
+        <span class="brow-key">Total Score</span>
+        <span class="brow-val" style="color:${ptColor}">${pts} / ${MAX_PTS}</span>
+      </div>
+      <div class="brow">
+        <span class="brow-key">Course Required</span>
+        <span class="brow-val">${course.minPts} pts</span>
+      </div>
+      <div class="brow">
+        <span class="brow-key">General Minimum</span>
+        <span class="brow-val">${MIN_PASS} pts</span>
+      </div>
+      <div class="brow" style="border:none">
+        <span class="brow-key">University</span>
+        <span class="brow-val" style="color:#E2E8FF;font-size:12px">${uni}</span>
+      </div>
+    </div>
+
+    <div class="verdict-box ${verdictClass}">
+      <strong>💡 Next Steps:</strong> ${nextSteps}
+    </div>`;
+
+  goStep(4);
+}
+
+function restart() {
+  subjectGrades = ['A','A','A'];
+  subjectNames  = ['','',''];
+  selectedCourse = null;
+  document.getElementById('uniSelect').value = '';
+  document.getElementById('courseSelect').value = '';
+  document.getElementById('courseReqBox').classList.add('hidden');
+  updateMeter();
+  goStep(1);
+}
+
+// init
+initCourses();
+updateMeter();
+</script>
+</body>
+</html>
